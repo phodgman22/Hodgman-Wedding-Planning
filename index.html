@@ -298,5 +298,13 @@ img { max-width: 100%; }
 </div>
 <div class="toast" id="toast" hidden></div>
 <script type="module" src="./app.js"></script>
+<script>
+  // If app.js or Firebase can't load, say so instead of leaving a dead button.
+  window.addEventListener("error", e => {
+    if (!e.target || !e.target.src) return;
+    const el = document.getElementById("gate-err");
+    if (el) { el.textContent = "The app couldn't load part of itself. Check your connection and reload the page."; el.hidden = false; }
+  }, true);
+</script>
 </body>
 </html>

@@ -712,19 +712,26 @@ async function unlock() {
   const err = m => { $("#gate-err").textContent = m; $("#gate-err").hidden = false; };
   if (code.length < 16) return err("That code is too short. Check it and try again. It looks like VENUE-XXXX-XXXX-XXXX.");
   if (!name) return err("Add your first name so your partner can see who wrote each note.");
-  $("#gate-go").disabled = true;
+  const go = $("#gate-go");
+  go.disabled = true; go.textContent = "Opening…";
   try {
-    const snap = await get(ref(fdb, "venuetracker/" + code + "/meta"));
+    const snap = await withTimeout(get(ref(fdb, "venuetracker/" + code + "/meta")), 12000);
     if (!snap.exists()) { $("#gate-form").hidden = true; $("#gate-new").hidden = false; $("#gate-newcode").textContent = code; return; }
     enter(code, name);
   } catch (e) {
     console.error(e);
-    err(/permission/i.test(String(e && e.message)) ? "The database refused access. The rules from database.rules.json may not be published yet (see README)." : "Couldn't reach the database. Check your connection and try again.");
-  } finally { $("#gate-go").disabled = false; }
+    const m = String(e && e.message);
+    err(/permission/i.test(m) ? "The database refused access. The rules from database.rules.json may not be published yet (see README)."
+      : m === "timeout" ? "The database didn't answer. Check that the Realtime Database has been created in Firebase and that its URL matches databaseURL in firebase-config.js."
+      : "Couldn't reach the database. Check your connection and try again.");
+  } finally { go.disabled = false; go.textContent = "Open tracker"; }
+}
+function withTimeout(promise, ms) {
+  return Promise.race([promise, new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), ms))]);
 }
 async function createTracker() {
   const code = normCode($("#gate-code").value), name = $("#gate-name").value.trim();
-  try { await set(ref(fdb, "venuetracker/" + code + "/meta"), { createdAt: Date.now() }); enter(code, name); }
+  try { await withTimeout(set(ref(fdb, "venuetracker/" + code + "/meta"), { createdAt: Date.now() }), 12000); enter(code, name); }
   catch (e) { console.error(e); showGate("Couldn't create the tracker. Check your connection and try again."); }
 }
 function enter(code, name) {
