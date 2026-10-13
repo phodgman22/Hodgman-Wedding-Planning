@@ -1,0 +1,13 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+
+    "venuetracker": {
+      "$code": {
+        ".read": "$code.length >= 16",
+        ".write": "$code.length >= 16"
+      }
+    }
+  }
+}

@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#2C5D53">
+<title>Venue Tours</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: one column; overview = settings strip, venue cards, compare table, date roll-up. Detail = stacked sections. */
+:root {
+  --bg: #F4F6F3; --surface: #FFFFFF; --ink: #1C2320; --muted: #5C6762; --line: #DAE0DB;
+  --accent: #2C5D53; --accent-ink: #FFFFFF; --accent-soft: #E1EDE8;
+  --gold: #A67C2E; --good: #2D7748; --warn: #A8720E; --bad: #AD3F3B;
+  --good-soft: #E2F1E6; --warn-soft: #F7EDD8; --bad-soft: #F6E3E1;
+  --display: "Young Serif", Georgia, "Times New Roman", serif;
+  --body: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --r: 10px;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #111614; --surface: #19201D; --ink: #E6ECE8; --muted: #98A49E; --line: #2A3430;
+  --accent: #7DB8A8; --accent-ink: #0F1A17; --accent-soft: #1E2D29;
+  --gold: #D8B25F; --good: #6DC48B; --warn: #E1B04E; --bad: #E77B73;
+  --good-soft: #1B2D22; --warn-soft: #30281A; --bad-soft: #321F1E; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #111614; --surface: #19201D; --ink: #E6ECE8; --muted: #98A49E; --line: #2A3430;
+  --accent: #7DB8A8; --accent-ink: #0F1A17; --accent-soft: #1E2D29;
+  --gold: #D8B25F; --good: #6DC48B; --warn: #E1B04E; --bad: #E77B73;
+  --good-soft: #1B2D22; --warn-soft: #30281A; --bad-soft: #321F1E; color-scheme: dark }
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.5 var(--body); }
+.wrap { max-width: 920px; margin: 0 auto; padding-inline: 16px; padding-block: 20px 72px; display: grid; gap: 22px; }
+h1, h2, h3 { font-family: var(--display); font-weight: 400; margin: 0; text-wrap: balance; }
+h1 { font-size: 1.9rem; line-height: 1.15; }
+h2 { font-size: 1.25rem; }
+h3 { font-size: 1.05rem; }
+.eyebrow { font-size: .72rem; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.muted { color: var(--muted); }
+.num { font-variant-numeric: tabular-nums; }
+a { color: var(--accent); }
+
+button { font: inherit; cursor: pointer; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); padding: 7px 12px; }
+button:hover { border-color: var(--accent); }
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, .card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+button.ghost { border-color: transparent; background: transparent; color: var(--muted); padding: 4px 8px; }
+button.ghost:hover { color: var(--bad); }
+button.danger { color: var(--bad); border-color: var(--bad); background: transparent; }
+button:disabled { opacity: .5; cursor: default; }
+
+input, select, textarea { font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; width: 100%; min-width: 0; }
+textarea { resize: vertical; }
+input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent); padding: 0; flex: none; }
+label.f { display: grid; gap: 4px; min-width: 0; }
+label.f > span { font-size: .78rem; color: var(--muted); font-weight: 600; }
+.money { position: relative; }
+.money::before { content: "$"; position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
+.money input { padding-left: 22px; }
+.pct { position: relative; }
+.pct::after { content: "%"; position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
+
+.grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+.row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.spread { justify-content: space-between; }
+
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 16px; display: grid; gap: 14px; min-width: 0; }
+
+/* header */
+.top { display: grid; gap: 6px; }
+.summary { color: var(--muted); }
+
+/* status pills */
+.pill { display: inline-block; font-size: .74rem; font-weight: 600; padding: 2px 9px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); white-space: nowrap; }
+.s-totour { background: var(--accent-soft); color: var(--accent); }
+.s-toured { background: var(--warn-soft); color: var(--warn); }
+.s-shortlist { background: var(--good-soft); color: var(--good); }
+.s-out { background: var(--bad-soft); color: var(--bad); }
+.s-booked { background: var(--good); color: var(--surface); }
+
+/* cards */
+.cards { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 14px; display: grid; gap: 8px; cursor: pointer; text-align: left; align-content: start; }
+.card:hover { border-color: var(--accent); }
+.card.out { opacity: .62; }
+.card h3 { overflow-wrap: anywhere; }
+.facts { display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; font-size: .88rem; }
+.facts dt { color: var(--muted); }
+.facts dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
+.over { color: var(--bad); font-weight: 600; }
+.under { color: var(--good); font-weight: 600; }
+.stars { color: var(--gold); letter-spacing: 1px; white-space: nowrap; }
+
+.tabs { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.tabs button { border: 0; border-radius: 0; background: transparent; color: var(--muted); }
+.tabs button[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+
+.empty { border: 1px dashed var(--line); border-radius: var(--r); padding: 28px 18px; text-align: center; color: var(--muted); display: grid; gap: 10px; justify-items: center; }
+
+.tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: .88rem; }
+th, td { padding: 9px 12px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; }
+th { font-size: .72rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+td.r, th.r { text-align: right; font-variant-numeric: tabular-nums; }
+tbody tr { cursor: pointer; }
+tbody tr:hover { background: var(--accent-soft); }
+tbody tr:last-child td { border-bottom: 0; }
+
+.datelist { display: grid; gap: 8px; }
+.dateline { display: grid; grid-template-columns: 150px 1fr; gap: 10px; align-items: start; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.dateline:last-child { border-bottom: 0; }
+.dateline.multi .d { color: var(--accent); font-weight: 600; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; min-width: 0; }
+.chip { font-size: .8rem; padding: 2px 9px; border-radius: 999px; border: 1px solid var(--line); background: var(--bg); }
+.chip.pref { border-color: var(--good); color: var(--good); }
+.chip.hold { border-color: var(--warn); color: var(--warn); }
+
+/* detail */
+.back { justify-self: start; }
+.detail-head { display: grid; gap: 10px; }
+.detail-head .name { font-family: var(--display); font-size: 1.6rem; border: 0; border-bottom: 1px dashed var(--line); border-radius: 0; padding: 2px 0; background: transparent; }
+.detail-head .name:focus { border-bottom-color: var(--accent); outline: none; }
+
+.est { display: grid; gap: 10px; }
+.est-total { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.est-total strong { font-family: var(--display); font-weight: 400; font-size: 1.7rem; font-variant-numeric: tabular-nums; }
+.bar { height: 8px; border-radius: 999px; background: var(--line); overflow: hidden; }
+.bar > i { display: block; height: 100%; background: var(--good); border-radius: 999px; }
+.bar.over > i { background: var(--bad); }
+.breakdown { display: grid; grid-template-columns: 1fr auto; gap: 2px 16px; font-size: .86rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.breakdown span:nth-child(even) { text-align: right; }
+
+.rate-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.rate-row .who { min-width: 90px; font-weight: 600; }
+.starbtn { border: 0; background: transparent; padding: 2px 3px; font-size: 1.5rem; line-height: 1; color: var(--line); }
+.starbtn.on { color: var(--gold); }
+.starbtn:hover { color: var(--gold); }
+
+.feat { display: flex; flex-wrap: wrap; gap: 8px; }
+.feat button { border-radius: 999px; font-size: .85rem; padding: 5px 12px; }
+.feat button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.feat button[aria-pressed="true"]::before { content: "✓ "; }
+
+.qlist { display: grid; gap: 4px; }
+.q { display: grid; grid-template-columns: auto 1fr auto; gap: 4px 10px; align-items: start; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.q:last-child { border-bottom: 0; }
+.q input[type="checkbox"] { margin-top: 10px; }
+.q .qt { resize: none; field-sizing: content; min-height: 0; overflow-wrap: anywhere; border-color: transparent; background: transparent; font-weight: 500; padding-left: 4px; }
+.q .qt:hover, .q .qt:focus { border-color: var(--line); }
+.q.done .qt { color: var(--muted); }
+.q textarea { grid-column: 2 / 3; font-size: .9rem; min-height: 38px; }
+.q .ghost { margin-top: 4px; }
+.qprog { font-size: .85rem; color: var(--muted); }
+
+.dl { display: grid; gap: 8px; }
+.drow { display: grid; grid-template-columns: minmax(130px, 160px) minmax(120px, 150px) 1fr auto; gap: 8px; align-items: center; }
+
+.notes { display: grid; gap: 10px; }
+.note { display: grid; gap: 4px; padding: 10px 12px; border-radius: 8px; background: var(--bg); border-left: 3px solid var(--line); }
+.note.love { border-left-color: var(--good); }
+.note.concern { border-left-color: var(--bad); }
+.note .meta { font-size: .78rem; color: var(--muted); display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.note p { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.addnote { display: grid; gap: 8px; }
+
+.confirm { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding: 12px; border-radius: 8px; background: var(--bad-soft); }
+
+.webrow { display: flex; gap: 8px; align-items: end; }
+.webrow label { flex: 1; }
+.webrow a { white-space: nowrap; padding: 8px 4px; font-weight: 600; }
+
+.card .cover { aspect-ratio: 16 / 9; max-width: 100%; width: 100%; object-fit: cover; border-radius: 6px; background: var(--bg); display: block; }
+
+.linkish { border: 0; background: none; padding: 0; color: var(--accent); font-weight: 600; text-decoration: underline; }
+
+.gate { max-width: 440px; margin: 8vh auto 0; display: grid; gap: 14px; }
+.gate .panel { gap: 12px; }
+.gate .err { color: var(--bad); font-size: .9rem; }
+.gate code, .gate .code { font-family: ui-monospace, "SF Mono", Menlo, monospace; letter-spacing: .04em; }
+.gate .remember { display: flex; gap: 8px; align-items: center; font-size: .9rem; color: var(--muted); }
+#gate-code { text-transform: uppercase; font-family: ui-monospace, "SF Mono", Menlo, monospace; letter-spacing: .05em; }
+.foot { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; justify-content: space-between; border-top: 1px solid var(--line); padding-top: 16px; font-size: .88rem; color: var(--muted); }
+.foot .row { gap: 8px; }
+
+.uploader { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.uploader input[type="file"] { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.uploader label.btn { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; border-radius: 8px; border: 1px solid var(--accent); background: var(--accent); color: var(--accent-ink); padding: 7px 14px; font-weight: 600; }
+.uploader label.btn.alt { background: var(--surface); color: var(--accent); }
+.uploader label.btn:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+.uploader label.btn.off { opacity: .5; pointer-events: none; }
+.upstatus { font-size: .85rem; color: var(--muted); }
+
+.photos { display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); }
+.photos button { padding: 0; border: 0; border-radius: 8px; overflow: hidden; aspect-ratio: 1; background: var(--bg); max-width: 100%; }
+.photos img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.files { display: grid; gap: 6px; }
+.file { display: grid; grid-template-columns: auto 1fr auto auto; gap: 10px; align-items: center; padding: 8px 10px; border-radius: 8px; background: var(--bg); min-width: 0; }
+.file .ico { font-size: .7rem; font-weight: 700; letter-spacing: .05em; color: var(--bad); border: 1px solid currentColor; border-radius: 4px; padding: 3px 5px; }
+.file .ico.img { color: var(--accent); }
+.file .fn { min-width: 0; overflow-wrap: anywhere; }
+.file .fn small { display: block; color: var(--muted); font-size: .78rem; }
+.file a { font-weight: 600; white-space: nowrap; }
+
+.lightbox { position: fixed; inset: 0; z-index: 20; background: rgba(8, 12, 10, .92); display: grid; grid-template-rows: auto 1fr auto; padding: calc(12px + env(safe-area-inset-top, 0px)) 16px calc(12px + env(safe-area-inset-bottom, 0px)); gap: 10px; }
+.lightbox .lb-img { min-height: 0; display: grid; place-items: center; }
+.lightbox img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 6px; }
+.lightbox .bar-top, .lightbox .bar-bot { display: flex; justify-content: space-between; align-items: center; gap: 10px; color: #E8ECE9; flex-wrap: wrap; }
+.lightbox button { background: rgba(255,255,255,.12); border-color: transparent; color: #FFFFFF; }
+.lightbox button.del { color: #F2A29C; }
+.lightbox .meta { font-size: .85rem; color: #B8C2BD; }
+
+.banner { padding: 10px 14px; border-radius: 8px; background: var(--warn-soft); color: var(--warn); font-size: .9rem; }
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 8px; font-size: .9rem; max-width: calc(100% - 32px); }
+
+@media (max-width: 560px) {
+  h1 { font-size: 1.6rem; }
+  .drow { grid-template-columns: 1fr 1fr; }
+  .drow .dnote { grid-column: 1 / 2; }
+  .dateline { grid-template-columns: 1fr; gap: 4px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+<style>
+body { margin: 0; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <span class="eyebrow">Wedding planning</span>
+    <h1>Venue Tours</h1>
+    <div class="summary" id="summary"></div>
+  </header>
+
+  <div class="banner" id="banner" hidden></div>
+
+  <!-- ACCESS CODE -->
+  <section id="gate" class="gate" hidden>
+    <div class="panel" id="gate-form">
+      <h2>Open your tracker</h2>
+      <p class="muted" style="margin:0">Enter the access code you were given. Anyone with the code can see and edit everything, so share it only with each other.</p>
+      <label class="f"><span>Access code</span><input id="gate-code" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="VENUE-XXXX-XXXX-XXXX"></label>
+      <label class="f"><span>Your first name</span><input id="gate-name" type="text" autocomplete="given-name" placeholder="Shown on your notes and ratings"></label>
+      <label class="remember"><input type="checkbox" id="gate-remember" checked> Remember on this device</label>
+      <div class="err" id="gate-err" hidden></div>
+      <div><button type="button" class="primary" id="gate-go">Open tracker</button></div>
+    </div>
+    <div class="panel" id="gate-new" hidden>
+      <h2>Start a new tracker?</h2>
+      <p style="margin:0">No tracker uses <span class="code" id="gate-newcode"></span> yet. If you mistyped it, go back and fix it. Otherwise start a new, empty tracker with this code.</p>
+      <div class="row"><button type="button" class="primary" id="gate-create">Start new tracker</button><button type="button" id="gate-back">Re-enter code</button></div>
+    </div>
+  </section>
+
+  <div id="app" class="wrap" style="padding:0;max-width:none" hidden>
+    <!-- OVERVIEW -->
+    <div id="list-view" class="wrap" style="padding:0;max-width:none">
+      <section class="panel" aria-label="Our plan">
+        <div class="grid">
+          <label class="f"><span>Guest count</span><input id="s-guests" type="number" inputmode="numeric" min="0" placeholder="e.g. 150" data-s="guests" data-t="num"></label>
+          <label class="f"><span>Venue budget (all-in)</span><div class="money"><input id="s-budget" type="number" inputmode="numeric" min="0" placeholder="e.g. 30000" data-s="budget" data-t="num"></div></label>
+          <label class="f"><span>Date window</span><input id="s-window" type="text" placeholder="e.g. Sep–Oct 2027, Saturdays" data-s="window"></label>
+        </div>
+      </section>
+
+      <div class="row spread">
+        <div class="tabs" role="group" aria-label="View">
+          <button type="button" id="tab-cards" aria-pressed="true">Venues</button>
+          <button type="button" id="tab-compare" aria-pressed="false">Compare</button>
+          <button type="button" id="tab-dates" aria-pressed="false">Dates</button>
+        </div>
+        <button type="button" class="primary" id="add-venue">+ Add venue</button>
+      </div>
+
+      <section id="cards" class="cards"></section>
+      <section id="compare" hidden></section>
+      <section id="dates" class="panel" hidden></section>
+
+      <footer class="foot">
+        <span>Signed in as <strong id="whoami"></strong></span>
+        <span class="row">
+          <button type="button" id="export-md">Download notes</button>
+          <button type="button" id="export-json">Download backup</button>
+          <button type="button" id="lock">Lock</button>
+        </span>
+      </footer>
+    </div>
+
+    <!-- DETAIL -->
+    <div id="detail-view" class="wrap" style="padding:0;max-width:none" hidden></div>
+  </div>
+</div>
+<div class="toast" id="toast" hidden></div>
+<script type="module" src="./app.js"></script>
+</body>
+</html>
